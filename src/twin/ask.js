@@ -54,5 +54,8 @@ export async function askTwin(question) {
     return { answer: "I can't help with that one.", sources: [], refused: "model" };
   }
   const answer = response.content.filter((b) => b.type === "text").map((b) => b.text).join("").trim();
-  return { answer, sources: sourcesOf(passages), usage: response.usage };
+  // Show only the sources the answer actually cites, e.g. [1] or [2].
+  const cited = new Set([...answer.matchAll(/\[(\d+)\]/g)].map((m) => Number(m[1])));
+  const sources = sourcesOf(passages).filter((s) => !cited.size || cited.has(s.n));
+  return { answer, sources, usage: response.usage };
 }

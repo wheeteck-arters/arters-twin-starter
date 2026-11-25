@@ -23,7 +23,7 @@ fs.existsSync(path.join(ROOT, ".env")) ? ok(".env file", "found") : fail(".env f
 
 const looksLike = (v, re) => v && re.test(v);
 looksLike(config.anthropicKey, /^sk-ant-/) ? ok("Anthropic key", "set") : fail("Anthropic key", "add ANTHROPIC_API_KEY to .env (console.anthropic.com > API keys)");
-looksLike(config.geminiKey, /^[A-Za-z0-9_-]{30,}$/) ? ok("Gemini key", "set") : fail("Gemini key", "add GEMINI_API_KEY to .env (aistudio.google.com > Get API key)");
+looksLike(config.geminiKey, /^\S{20,}$/) ? ok("Gemini key", "set") : fail("Gemini key", "add GEMINI_API_KEY to .env (aistudio.google.com > Get API key)");
 
 async function live() {
   if (process.argv.includes("--offline")) return;

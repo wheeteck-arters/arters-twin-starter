@@ -12,8 +12,28 @@ function keywords(text, n = 4) {
   return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, n).map(([w]) => w);
 }
 
+// Gemini model names change often, so unless GEMINI_MODEL is set we ask Google
+// which models this key can use and pick the newest stable "flash" one.
+let modelName;
+async function pickModel() {
+  if (config.geminiModel) return config.geminiModel;
+  if (modelName) return modelName;
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key=${config.geminiKey}`);
+  if (!res.ok) throw new Error(`Gemini model list ${res.status}`);
+  const { models = [] } = await res.json();
+  const ok = models.filter((m) => (m.supportedGenerationMethods || []).includes("generateContent"))
+    .map((m) => m.name.replace(/^models\//, ""))
+    .filter((n) => /flash/.test(n) && !/(lite|preview|exp|image|tts|live|audio|thinking)/.test(n));
+  const version = (n) => parseFloat((n.match(/gemini-(\d+(?:\.\d+)?)/) || [])[1] || 0);
+  ok.sort((a, b) => version(b) - version(a) || a.length - b.length);
+  if (!ok.length) throw new Error("no Flash model available for this key");
+  modelName = ok[0];
+  console.log(`Using Gemini model ${modelName} for topic tags.`);
+  return modelName;
+}
+
 async function geminiTag(note) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.geminiModel}:generateContent?key=${config.geminiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${await pickModel()}:generateContent?key=${config.geminiKey}`;
   const prompt = `Read this piece of writing. Reply with JSON only: {"topics": [3 to 5 short lowercase topics], "summary": "one sentence, under 25 words"}\n\nTITLE: ${note.title}\n\n${note.body.slice(0, 12000)}`;
   const res = await fetch(url, {
     method: "POST", headers: { "content-type": "application/json" },

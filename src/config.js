@@ -19,7 +19,7 @@ export const config = {
   anthropicKey: env("ANTHROPIC_API_KEY"),
   twinModel: env("TWIN_MODEL", "claude-opus-5-5"),
   geminiKey: env("GEMINI_API_KEY"),
-  geminiModel: env("GEMINI_MODEL", "gemini-2.5-flash"),
+  geminiModel: env("GEMINI_MODEL"), // empty = pick the newest Flash model automatically
   name: env("TWIN_NAME", "Your Name"),
   headline: env("TWIN_HEADLINE", "What you do, in one line"),
   location: env("TWIN_LOCATION", ""),
