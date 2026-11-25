@@ -13,12 +13,13 @@ function keywords(text, n = 4) {
 }
 
 // Gemini model names change often, so unless GEMINI_MODEL is set we ask Google
-// which models this key can use and pick the newest stable "flash" one.
-let modelName;
-async function pickModel() {
-  if (config.geminiModel) return config.geminiModel;
-  if (modelName) return modelName;
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key=${config.geminiKey}`);
+// which models this key can use and try the newest stable "flash" ones first.
+const API = "https://generativelanguage.googleapis.com/v1beta";
+let candidates;
+async function modelCandidates() {
+  if (candidates) return candidates;
+  if (config.geminiModel) return (candidates = [config.geminiModel]);
+  const res = await fetch(`${API}/models?pageSize=200&key=${config.geminiKey}`);
   if (!res.ok) throw new Error(`Gemini model list ${res.status}`);
   const { models = [] } = await res.json();
   const ok = models.filter((m) => (m.supportedGenerationMethods || []).includes("generateContent"))
@@ -27,29 +28,63 @@ async function pickModel() {
   const version = (n) => parseFloat((n.match(/gemini-(\d+(?:\.\d+)?)/) || [])[1] || 0);
   ok.sort((a, b) => version(b) - version(a) || a.length - b.length);
   if (!ok.length) throw new Error("no Flash model available for this key");
-  modelName = ok[0];
-  console.log(`Using Gemini model ${modelName} for topic tags.`);
-  return modelName;
+  return (candidates = ok.slice(0, 3));
 }
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// One call to one model. Retries "busy" (503) and "too fast" (429) answers,
+// waiting longer each time, as Google asks.
+async function callModel(model, prompt) {
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(`${API}/models/${model}:generateContent?key=${config.geminiKey}`, {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return JSON.parse(data.candidates[0].content.parts[0].text);
+    }
+    if ((res.status === 429 || res.status === 503) && attempt < 4) {
+      const wait = Number(res.headers.get("retry-after")) * 1000 || 2000 * 2 ** attempt; // 2, 4, 8, 16 s
+      await sleep(wait);
+      continue;
+    }
+    const err = new Error(`Gemini ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+}
+
+// Try the current model; if it stays busy or is missing, move to the next one.
+let current = 0;
+let announced = "";
 async function geminiTag(note) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${await pickModel()}:generateContent?key=${config.geminiKey}`;
+  const models = await modelCandidates();
   const prompt = `Read this piece of writing. Reply with JSON only: {"topics": [3 to 5 short lowercase topics], "summary": "one sentence, under 25 words"}\n\nTITLE: ${note.title}\n\n${note.body.slice(0, 12000)}`;
-  const res = await fetch(url, {
-    method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } }),
-  });
-  if (!res.ok) throw new Error(`Gemini ${res.status}`);
-  const data = await res.json();
-  return JSON.parse(data.candidates[0].content.parts[0].text);
+  while (current < models.length) {
+    const model = models[current];
+    if (announced !== model) { console.log(`Using Gemini model ${model} for topic tags.`); announced = model; }
+    try { return await callModel(model, prompt); }
+    catch (e) {
+      if ([404, 429, 503].includes(e.status) && current < models.length - 1) { current++; continue; }
+      throw e;
+    }
+  }
+  throw new Error("no Gemini model available");
 }
 
 export async function tagNotes(notes) {
   let usedGemini = false;
+  let geminiOn = Boolean(config.geminiKey);
   for (const n of notes) {
-    if (config.geminiKey) {
+    if (geminiOn) {
       try { Object.assign(n, await geminiTag(n)); usedGemini = true; continue; }
-      catch (e) { console.warn(`Gemini tagging failed for "${n.title}" (${e.message}); using keywords.`); }
+      catch (e) {
+        // Stop asking after a hard failure so the screen isn't flooded; the rest use keywords.
+        console.warn(`Gemini tagging stopped at "${n.title}" (${e.message}); the remaining notes use keywords. Try again later.`);
+        geminiOn = false;
+      }
     }
     n.topics = keywords(`${n.title} ${n.title} ${n.body}`);
     n.summary = n.body.split(/(?<=[.!?])\s/)[0].slice(0, 160);
@@ -61,5 +96,5 @@ export async function tagNotes(notes) {
       .filter(([, s]) => s > 0).sort((a, b) => b[1] - a[1]).slice(0, 3)
       .map(([o]) => slugify(o.title));
   }
-  console.log(usedGemini ? "Topics tagged by Gemini." : "Topics tagged by keywords (add GEMINI_API_KEY for better tags).");
+  console.log(usedGemini ? "Topics tagged by Gemini." : config.geminiKey ? "Topics tagged by keywords (Gemini was unavailable)." : "Topics tagged by keywords (add GEMINI_API_KEY for better tags).");
 }
