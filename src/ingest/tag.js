@@ -37,10 +37,17 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // waiting longer each time, as Google asks.
 async function callModel(model, prompt) {
   for (let attempt = 0; ; attempt++) {
-    const res = await fetch(`${API}/models/${model}:generateContent?key=${config.geminiKey}`, {
-      method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } }),
-    });
+    let res;
+    try {
+      res = await fetch(`${API}/models/${model}:generateContent?key=${config.geminiKey}`, {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } }),
+      });
+    } catch (e) {
+      // Network hiccup (Wi-Fi, VPN, Google dropped the connection): wait and retry.
+      if (attempt < 4) { await sleep(2000 * 2 ** attempt); continue; }
+      throw new Error(`network problem reaching Gemini (${e.cause?.code || e.message})`);
+    }
     if (res.ok) {
       const data = await res.json();
       return JSON.parse(data.candidates[0].content.parts[0].text);
