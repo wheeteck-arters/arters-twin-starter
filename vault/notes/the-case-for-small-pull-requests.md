@@ -4,15 +4,11 @@ type: article
 source: linkedin-article
 date: 2026-08-19
 topics: [pull, requests, small, case]
-summary: The case for small pull requests  Created on 2026-08-19  If I could change one habit across every engineering team I've worked with, it would be the size of pul
+summary: If I could change one habit across every engineering team I've worked with, it would be the size of pull requests.
 public: true
 ---
 
 # The case for small pull requests
-
-The case for small pull requests
-
-Created on 2026-08-19
 
 If I could change one habit across every engineering team I've worked with, it would be the size of pull requests.
 

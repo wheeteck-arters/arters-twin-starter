@@ -4,15 +4,11 @@ type: article
 source: linkedin-article
 date: 2026-10-01
 topics: [saying, without, stakeholders, losing]
-summary: Saying no to stakeholders without losing them  Created on 2026-10-01  Engineering leads spend a surprising amount of time saying no.
+summary: Engineering leads spend a surprising amount of time saying no.
 public: true
 ---
 
 # Saying no to stakeholders without losing them
-
-Saying no to stakeholders without losing them
-
-Created on 2026-10-01
 
 Engineering leads spend a surprising amount of time saying no. Done badly, it burns trust. Done well, it builds it.
 

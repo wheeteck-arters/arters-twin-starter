@@ -3,6 +3,7 @@
 // share buttons. Ask Claude Code to extend this so those come out clean.
 export function htmlToText(html) {
   return html
+    .replace(/<head[\s\S]*?<\/head>/i, "")
     .replace(/<(script|style|nav|footer)[\s\S]*?<\/\1>/gi, "")
     .replace(/<\/(p|div|h[1-6]|li|blockquote)>/gi, "\n\n")
     .replace(/<br\s*\/?>/gi, "\n")

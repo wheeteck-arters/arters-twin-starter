@@ -3,16 +3,12 @@ title: How I grow senior engineers
 type: article
 source: linkedin-article
 date: 2026-05-28
-topics: [senior, engineers, grow, writing]
-summary: How I grow senior engineers  Created on 2026-05-28  Promotion to senior is not a reward for writing more code.
+topics: [senior, engineers, writing, grow]
+summary: Promotion to senior is not a reward for writing more code.
 public: true
 ---
 
 # How I grow senior engineers
-
-How I grow senior engineers
-
-Created on 2026-05-28
 
 Promotion to senior is not a reward for writing more code. It's recognition that someone makes the people around them better.
 

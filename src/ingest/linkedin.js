@@ -25,7 +25,7 @@ export function parseArticles(dir) {
     const html = fs.readFileSync(path.join(dir, f), "utf8");
     const title = (html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] || f.replace(/\.html$/, "")).replace(/<[^>]+>/g, "").trim();
     const date = html.match(/(\d{4}-\d{2}-\d{2})/)?.[1] || "";
-    const body = htmlToText(html.replace(/<h1[\s\S]*?<\/h1>/i, ""));
+    const body = htmlToText(html.replace(/<h1[\s\S]*?<\/h1>/i, "").replace(/<p class="created">[\s\S]*?<\/p>/i, ""));
     return { title, type: "article", source: "linkedin-article", date, body };
   });
 }
