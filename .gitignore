@@ -1,0 +1,6 @@
+node_modules/
+.env
+raw-artifacts/*
+!raw-artifacts/README.md
+private/
+.DS_Store

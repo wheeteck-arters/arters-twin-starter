@@ -1,0 +1,25 @@
+{
+  "name": "arters-twin-starter",
+  "version": "0.1.0",
+  "description": "Starter repo for the Arters 3-day build sprint: turn your writing into a Digital Twin and ship it as a personal site.",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "check": "node scripts/check.js",
+    "ingest": "node src/ingest/index.js",
+    "ingest:sample": "node src/ingest/index.js --sample",
+    "index": "node src/search/index-vault.js",
+    "ask": "node src/twin/cli.js",
+    "draft": "node src/voice/draft.js",
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.14.0",
+    "csv-parse": "^7.0.3",
+    "express": "^4.21.2",
+    "marked": "^18.3.0"
+  }
+}

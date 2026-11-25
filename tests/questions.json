@@ -1,0 +1,12 @@
+[
+  { "q": "How do you make code reviews faster?", "expect": "code-review" },
+  { "q": "How should an on-call rotation work?", "expect": "on-call" },
+  { "q": "What do you look for when interviewing engineers?", "expect": "hiring|interview|engineers-the-signal" },
+  { "q": "Why do platform teams fail?", "expect": "platform" },
+  { "q": "How do you run postmortems?", "expect": "postmortem" },
+  { "q": "How big should a pull request be?", "expect": "pull-request" },
+  { "q": "How do you handle technical debt?", "expect": "debt" },
+  { "q": "What questions do you ask in one-to-ones?", "expect": "1-1s|one-to-one|manager" },
+  { "q": "How has AI changed the way your team codes?", "expect": "ai" },
+  { "q": "How do you say no to stakeholders?", "expect": "stakeholder" }
+]
